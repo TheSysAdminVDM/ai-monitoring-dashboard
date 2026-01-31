@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-space-black text-gray-100 font-sans;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(0, 217, 255, 0.05) 0%, transparent 50%),
+      linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 50px 50px, 50px 50px;
+    background-position: center, 0 0, 0 0;
+  }
+}
+
+@layer components {
+  .card-sci-fi {
+    @apply bg-space-dark border border-neon-blue/20 rounded-lg p-6 backdrop-blur-sm;
+    @apply shadow-lg hover:border-neon-blue/40 transition-all duration-300;
+    box-shadow:
+      0 0 20px rgba(0, 217, 255, 0.1),
+      inset 0 0 20px rgba(0, 217, 255, 0.05);
+  }
+
+  .card-sci-fi:hover {
+    box-shadow:
+      0 0 30px rgba(0, 217, 255, 0.2),
+      inset 0 0 30px rgba(0, 217, 255, 0.08);
+  }
+
+  .stat-card {
+    @apply card-sci-fi relative overflow-hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-blue to-transparent;
+    animation: scan 3s linear infinite;
+  }
+
+  .button-primary {
+    @apply px-6 py-3 bg-neon-blue/10 border border-neon-blue/50 rounded-lg;
+    @apply text-neon-blue font-semibold transition-all duration-300;
+    @apply hover:bg-neon-blue/20 hover:border-neon-blue hover:shadow-lg;
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+  }
+
+  .button-primary:hover {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+  }
+
+  .button-danger {
+    @apply px-6 py-3 bg-danger-red/10 border border-danger-red/50 rounded-lg;
+    @apply text-danger-red font-semibold transition-all duration-300;
+    @apply hover:bg-danger-red/20 hover:border-danger-red hover:shadow-lg;
+  }
+
+  .metric-value {
+    @apply text-4xl font-bold font-mono text-neon-blue;
+    text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  }
+
+  .metric-label {
+    @apply text-sm text-gray-400 uppercase tracking-wider font-mono;
+  }
+
+  .alert-warning {
+    @apply bg-warning-orange/10 border border-warning-orange/50 text-warning-orange;
+  }
+
+  .alert-critical {
+    @apply bg-danger-red/10 border border-danger-red/50 text-danger-red;
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+
+  .alert-safe {
+    @apply bg-neon-green/10 border border-neon-green/50 text-neon-green;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .scanline {
+    @apply absolute inset-0 pointer-events-none overflow-hidden;
+  }
+
+  .scanline::after {
+    content: '';
+    @apply absolute w-full h-px bg-gradient-to-r from-transparent via-neon-blue/50 to-transparent;
+    animation: scan 4s linear infinite;
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(2000%);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-space-gray;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neon-blue/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neon-blue/50;
+}
