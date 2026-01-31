@@ -1,6 +1,5 @@
-version: '3.8'
-
-# Docker Compose for deployment with Cloudflare Origin Certificate
+# Docker Compose for deployment with Cloudflare Tunnel (Zero Trust)
+# No ports exposed, no SSL certificates needed
 
 services:
   # Frontend served by Nginx
@@ -28,20 +27,28 @@ services:
     networks:
       - app-network
 
-  # Nginx Reverse Proxy with Cloudflare Origin SSL
+  # Nginx Reverse Proxy (internal only, no SSL needed)
   nginx:
     image: nginx:alpine
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d/cloudflare.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/conf.d/tunnel.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - frontend
       - backend
+    networks:
+      - app-network
+
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
     networks:
       - app-network
 

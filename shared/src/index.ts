@@ -105,6 +105,7 @@ export interface ClaudeCodeStats {
   modelUsage: Record<string, ClaudeCodeModelUsage>;
   totalSessions: number;
   totalMessages: number;
+  lastComputedDate?: string;
 }
 
 export interface ClaudeCodeDashboardMetrics {

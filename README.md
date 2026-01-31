@@ -171,6 +171,65 @@ Change the port in `server/src/index.ts` or set the `PORT` environment variable.
 - Live session data updates in real-time from `.jsonl` files
 - The `stats-cache.json` is updated by Claude Code periodically (not in real-time)
 
+## Production Deployment
+
+Deploy the dashboard to make it accessible from anywhere. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+
+### Deployment Options
+
+| Method | Best For | SSL | Complexity |
+|--------|----------|-----|------------|
+| [Cloudflare Tunnel](#cloudflare-tunnel-recommended) | Home servers, no port forwarding | Automatic | Easy |
+| [Cloudflare Origin Cert](#cloudflare-origin-certificate) | VPS with Cloudflare DNS | Cloudflare-managed | Medium |
+| [Let's Encrypt](#lets-encrypt) | VPS with direct DNS | Auto-renewing | Medium |
+| [Local Docker](#local-docker) | Local network access | None (HTTP) | Easy |
+
+### Cloudflare Tunnel (Recommended)
+
+Best option for home servers - no ports to open, automatic SSL.
+
+```bash
+# Set your tunnel token
+export CLOUDFLARE_TUNNEL_TOKEN='your-token-here'
+
+# Deploy
+docker compose -f docker-compose.tunnel.yml up -d --build
+```
+
+**Setup:**
+1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com/) → Networks → Tunnels
+2. Create a tunnel, copy the token
+3. Add public hostname: `yourdomain.com` → `http://nginx:80`
+
+### Cloudflare Origin Certificate
+
+For servers behind Cloudflare proxy with origin certificates.
+
+```bash
+# Place certificates in nginx/ssl/
+# - vdmtechde.pem (certificate)
+# - vdmtechde.key (private key)
+
+docker compose -f docker-compose.cloudflare.yml up -d --build
+```
+
+### Let's Encrypt
+
+For direct public servers with automatic certificate renewal.
+
+```bash
+./scripts/deploy.sh
+```
+
+### Local Docker
+
+For local network access without SSL.
+
+```bash
+docker compose -f docker-compose.local.yml up -d --build
+# Access at http://localhost
+```
+
 ## Future Features
 
 - [ ] Claude API status integration

@@ -28,14 +28,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy built files
+# Copy built files and package files
 COPY --from=builder /app/server/dist ./dist
 COPY --from=builder /app/server/package*.json ./
+COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/shared/dist ../shared/dist
 COPY --from=builder /app/shared/package*.json ../shared/
 
 # Install production dependencies only
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 # Set environment
 ENV NODE_ENV=production

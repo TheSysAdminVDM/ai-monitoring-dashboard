@@ -1,6 +1,4 @@
-version: '3.8'
-
-# Docker Compose for deployment with Cloudflare Origin Certificate
+# Docker Compose for local Windows deployment
 
 services:
   # Frontend served by Nginx
@@ -21,24 +19,22 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - CORS_ORIGIN=https://vdmtech.de
+      - CORS_ORIGIN=http://localhost
     volumes:
-      # Mount Claude Code stats directory (read-only)
-      - ~/.claude:/root/.claude:ro
+      # Mount Claude Code stats directory (Windows path)
+      - ${USERPROFILE}/.claude:/root/.claude:ro
     networks:
       - app-network
 
-  # Nginx Reverse Proxy with Cloudflare Origin SSL
+  # Nginx Reverse Proxy (HTTP only for local)
   nginx:
     image: nginx:alpine
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d/cloudflare.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/conf.d/local.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - frontend
       - backend

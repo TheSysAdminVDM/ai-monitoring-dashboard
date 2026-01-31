@@ -1,175 +1,302 @@
-# Deployment Guide - vdmtech.de
+# Deployment Guide
 
-Deploy the AI Monitoring Dashboard to your server with Docker and Let's Encrypt SSL.
+Deploy the AI Monitoring Dashboard to make it accessible from anywhere.
 
-## Prerequisites
+## Deployment Options
 
-On your server:
+| Method | Best For | Ports Required | SSL | Complexity |
+|--------|----------|----------------|-----|------------|
+| **Cloudflare Tunnel** | Home servers, NAS, no public IP | None | Automatic | ⭐ Easy |
+| **Cloudflare Origin Cert** | VPS behind Cloudflare | 80, 443 | Cloudflare | ⭐⭐ Medium |
+| **Let's Encrypt** | VPS with direct DNS | 80, 443 | Auto-renew | ⭐⭐ Medium |
+| **Local Docker** | LAN access only | 80 | None | ⭐ Easy |
+
+---
+
+## Option 1: Cloudflare Tunnel (Recommended)
+
+**Best for:** Home servers, NAS devices, machines behind NAT/firewall.
+
+No ports to open, no SSL certificates to manage, automatic DDoS protection.
+
+### Prerequisites
+
 - Docker installed
-- Docker Compose installed
-- Port 80 and 443 open
-- Domain `vdmtech.de` pointed to your server's IP
+- Cloudflare account (free)
+- Domain on Cloudflare
 
-## Quick Deploy
+### Step 1: Create the Tunnel
 
-### 1. Clone the Repository
+1. Go to [Cloudflare Zero Trust Dashboard](https://one.dash.cloudflare.com/)
+2. Navigate to **Networks → Tunnels**
+3. Click **Create a tunnel**
+4. Choose **Cloudflared** connector
+5. Name: `ai-monitoring-dashboard`
+6. Click **Save tunnel**
+7. **Copy the tunnel token** (starts with `eyJ...`)
+
+### Step 2: Configure Public Hostname
+
+In the tunnel configuration:
+
+1. Click **Add a public hostname**
+2. Configure:
+   - **Subdomain**: (leave blank for root, or use `dashboard`)
+   - **Domain**: `yourdomain.com`
+   - **Type**: HTTP
+   - **URL**: `nginx:80`
+3. Click **Save hostname**
+
+### Step 3: Deploy
 
 ```bash
-ssh user@your-server
+# Clone the repository
 git clone https://github.com/TheSysAdminVDM/ai-monitoring-dashboard.git
 cd ai-monitoring-dashboard
+
+# Set the tunnel token
+export CLOUDFLARE_TUNNEL_TOKEN='eyJhIjoiYWNj...'
+
+# Deploy
+docker compose -f docker-compose.tunnel.yml up -d --build
 ```
 
-### 2. Configure Email for SSL
+Or create a `.env` file:
 
-Edit `scripts/deploy.sh` and set your email:
-
-```bash
-EMAIL="your-email@example.com"  # For Let's Encrypt notifications
+```env
+CLOUDFLARE_TUNNEL_TOKEN=eyJhIjoiYWNj...
 ```
 
-### 3. Run Deployment Script
+Then run:
+```bash
+docker compose -f docker-compose.tunnel.yml up -d --build
+```
+
+### Step 4: Verify
+
+1. Check tunnel status in Cloudflare dashboard (should show "Healthy")
+2. Visit `https://yourdomain.com`
+
+### Manage
 
 ```bash
+# View logs
+docker compose -f docker-compose.tunnel.yml logs -f
+
+# Stop
+docker compose -f docker-compose.tunnel.yml down
+
+# Update
+git pull
+docker compose -f docker-compose.tunnel.yml up -d --build
+```
+
+---
+
+## Option 2: Cloudflare Origin Certificate
+
+**Best for:** VPS/cloud servers with domain on Cloudflare.
+
+### Prerequisites
+
+- Docker installed
+- Server with public IP
+- Domain on Cloudflare (proxied)
+- Ports 80 and 443 open
+
+### Step 1: Create Origin Certificate
+
+1. Go to Cloudflare Dashboard → SSL/TLS → Origin Server
+2. Click **Create Certificate**
+3. Keep defaults (RSA, 15 years)
+4. Click **Create**
+5. Copy the certificate and private key
+
+### Step 2: Deploy
+
+```bash
+# Clone the repository
+git clone https://github.com/TheSysAdminVDM/ai-monitoring-dashboard.git
+cd ai-monitoring-dashboard
+
+# Create SSL directory
+mkdir -p nginx/ssl
+
+# Save certificate (paste content)
+nano nginx/ssl/vdmtechde.pem
+
+# Save private key (paste content)
+nano nginx/ssl/vdmtechde.key
+
+# Set permissions
+chmod 600 nginx/ssl/vdmtechde.key
+chmod 644 nginx/ssl/vdmtechde.pem
+
+# Deploy
+docker compose -f docker-compose.cloudflare.yml up -d --build
+```
+
+### Step 3: Configure Cloudflare
+
+1. SSL/TLS → Overview → Set to **Full (strict)**
+2. DNS → Ensure records have orange cloud (proxied)
+
+---
+
+## Option 3: Let's Encrypt
+
+**Best for:** VPS with domain pointing directly to server (not through Cloudflare proxy).
+
+### Prerequisites
+
+- Docker installed
+- Server with public IP
+- Domain DNS pointing to server
+- Ports 80 and 443 open
+
+### Deploy
+
+```bash
+# Clone the repository
+git clone https://github.com/TheSysAdminVDM/ai-monitoring-dashboard.git
+cd ai-monitoring-dashboard
+
+# Edit email in deploy script
+nano scripts/deploy.sh
+# Change: EMAIL="your-email@example.com"
+
+# Deploy
 chmod +x scripts/deploy.sh
 ./scripts/deploy.sh
 ```
 
-This will:
-1. Build the Docker containers
-2. Start the services
-3. Obtain SSL certificate from Let's Encrypt
-4. Enable HTTPS
+The script will:
+1. Start services with HTTP
+2. Obtain SSL certificate from Let's Encrypt
+3. Switch to HTTPS
 
-### 4. Done!
-
-Your dashboard is now live at **https://vdmtech.de**
+Certificates auto-renew via the certbot container.
 
 ---
 
-## Manual Deployment (Step by Step)
+## Option 4: Local Docker
 
-### Step 1: Initial Setup
+**Best for:** Local development, LAN access only.
 
-```bash
-# Create certificate directories
-mkdir -p certbot/conf certbot/www
-
-# Copy initial nginx config (HTTP only)
-cp nginx/conf.d/initial.conf.template nginx/conf.d/default.conf
-
-# Build and start containers
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### Step 2: Obtain SSL Certificate
+### Deploy
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm certbot certonly \
-    --webroot \
-    --webroot-path=/var/www/certbot \
-    --email YOUR_EMAIL@example.com \
-    --agree-tos \
-    --no-eff-email \
-    -d vdmtech.de \
-    -d www.vdmtech.de
+# Clone the repository
+git clone https://github.com/TheSysAdminVDM/ai-monitoring-dashboard.git
+cd ai-monitoring-dashboard
+
+# Deploy (Linux/Mac)
+docker compose -f docker-compose.local.yml up -d --build
+
+# Deploy (Windows)
+docker compose -f docker-compose.local.yml up -d --build
 ```
 
-### Step 3: Enable SSL
-
-```bash
-# Switch to SSL config
-rm nginx/conf.d/default.conf
-cp nginx/conf.d/vdmtech.conf nginx/conf.d/default.conf
-
-# Reload nginx
-docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
-```
+Access at `http://localhost` or `http://<server-ip>` on your LAN.
 
 ---
 
-## Important: Claude Code Data Access
+## Claude Code Data Access
 
-The dashboard reads Claude Code stats from `~/.claude/`. On a server, you have two options:
+The dashboard reads Claude Code stats from `~/.claude/`. On a remote server, you have options:
 
-### Option A: Run Claude Code on the Server
-If you use Claude Code via SSH on the server, the stats will be available automatically.
+### Option A: Run Claude Code on Server
 
-### Option B: Sync Stats from Your Local Machine
-Create a cron job to sync your local Claude Code stats to the server:
+If you use Claude Code via SSH on the server, stats are available automatically.
+
+### Option B: Sync from Local Machine
+
+Create a cron job to sync your local Claude Code stats:
 
 ```bash
 # On your local machine (add to crontab -e)
-*/5 * * * * rsync -az ~/.claude/ user@vdmtech.de:~/.claude/
+*/5 * * * * rsync -az ~/.claude/ user@server:~/.claude/
 ```
 
 ### Option C: Mount Remote Directory
-If using NFS or similar, mount your local `.claude` directory on the server.
+
+Use NFS, SSHFS, or similar to mount your local `.claude` directory on the server.
 
 ---
 
-## Managing the Deployment
+## Managing Deployments
 
 ### View Logs
 
 ```bash
-# All services
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.<type>.yml logs -f
 
 # Specific service
-docker compose -f docker-compose.prod.yml logs -f backend
-docker compose -f docker-compose.prod.yml logs -f frontend
-docker compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.<type>.yml logs -f backend
 ```
 
 ### Restart Services
 
 ```bash
-docker compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.<type>.yml restart
 ```
 
 ### Update Application
 
 ```bash
 git pull
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.<type>.yml up -d --build
 ```
 
 ### Stop Services
 
 ```bash
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.<type>.yml down
 ```
 
 ---
 
-## SSL Certificate Renewal
+## Architecture
 
-Certificates auto-renew via the certbot container. To manually renew:
-
-```bash
-docker compose -f docker-compose.prod.yml run --rm certbot renew
-docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
 ```
-
----
-
-## DNS Configuration
-
-Point your domain to your server:
-
-| Type | Name | Value |
-|------|------|-------|
-| A | @ | YOUR_SERVER_IP |
-| A | www | YOUR_SERVER_IP |
-
-Or use CNAME if using a dynamic DNS service.
+                     ┌─────────────────┐
+                     │   Cloudflare    │
+                     │  (SSL/Tunnel)   │
+                     └────────┬────────┘
+                              │
+                     ┌────────▼────────┐
+                     │     Nginx       │
+                     │ (Reverse Proxy) │
+                     └────────┬────────┘
+                              │
+            ┌─────────────────┴─────────────────┐
+            │                                   │
+     ┌──────▼──────┐                   ┌────────▼────────┐
+     │  Frontend   │                   │     Backend     │
+     │   (React)   │                   │   (Node.js)     │
+     └─────────────┘                   └────────┬────────┘
+                                                │
+                                       ┌────────▼────────┐
+                                       │   ~/.claude/    │
+                                       │  (stats files)  │
+                                       └─────────────────┘
+```
 
 ---
 
 ## Troubleshooting
 
-### Certificate Issues
+### Tunnel Not Connecting
+
+```bash
+# Check cloudflared logs
+docker compose -f docker-compose.tunnel.yml logs cloudflared
+
+# Verify token is set
+echo $CLOUDFLARE_TUNNEL_TOKEN
+```
+
+### SSL Certificate Issues (Let's Encrypt)
 
 ```bash
 # Check certificate status
@@ -179,60 +306,36 @@ docker compose -f docker-compose.prod.yml run --rm certbot certificates
 docker compose -f docker-compose.prod.yml run --rm certbot renew --force-renewal
 ```
 
-### Container Not Starting
+### Container Issues
 
 ```bash
-# Check container status
-docker compose -f docker-compose.prod.yml ps
+# Check status
+docker compose -f docker-compose.<type>.yml ps
 
-# View detailed logs
-docker compose -f docker-compose.prod.yml logs backend
+# View logs
+docker compose -f docker-compose.<type>.yml logs -f backend
+
+# Restart
+docker compose -f docker-compose.<type>.yml restart
 ```
 
 ### Port Already in Use
 
 ```bash
-# Check what's using port 80/443
+# Check what's using the port
 sudo lsof -i :80
 sudo lsof -i :443
 
 # Stop conflicting services
-sudo systemctl stop apache2  # or nginx if installed separately
+sudo systemctl stop apache2
+sudo systemctl stop nginx
 ```
 
 ---
 
 ## Security Notes
 
-1. **Firewall**: Only ports 80 and 443 should be exposed
-2. **Updates**: Keep Docker and containers updated
-3. **Backups**: Back up your `certbot/conf` directory
-4. **Monitoring**: Set up monitoring for certificate expiry
-
----
-
-## Architecture
-
-```
-                    ┌─────────────┐
-                    │   Internet  │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │    Nginx    │ :80, :443
-                    │ (SSL/Proxy) │
-                    └──────┬──────┘
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-       ┌──────▼──────┐          ┌───────▼───────┐
-       │  Frontend   │          │    Backend    │
-       │  (React)    │          │   (Node.js)   │
-       │   :80       │          │    :3001      │
-       └─────────────┘          └───────┬───────┘
-                                        │
-                                ┌───────▼───────┐
-                                │ ~/.claude/    │
-                                │ (stats files) │
-                                └───────────────┘
-```
+1. **Firewall**: For tunnel deployment, no ports need to be open
+2. **SSL Certificates**: Keep private keys secure (`chmod 600`)
+3. **Updates**: Regularly update Docker images
+4. **Backups**: Back up your SSL certificates if using Let's Encrypt
