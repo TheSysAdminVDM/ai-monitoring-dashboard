@@ -43,3 +43,6 @@ lerna-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# SSL Certificates (keep private!)
+nginx/ssl/

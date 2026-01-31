@@ -16,7 +16,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Check if SSL certificates exist
-if [ ! -f "nginx/ssl/cloudflare-origin.pem" ] || [ ! -f "nginx/ssl/cloudflare-origin.key" ]; then
+if [ ! -f "nginx/ssl/vdmtechde.pem" ] || [ ! -f "nginx/ssl/vdmtechde.key" ]; then
     echo ""
     echo "ERROR: Cloudflare Origin Certificate not found!"
     echo ""
@@ -26,8 +26,8 @@ if [ ! -f "nginx/ssl/cloudflare-origin.pem" ] || [ ! -f "nginx/ssl/cloudflare-or
     echo "2. Click 'Create Certificate'"
     echo "3. Keep defaults (RSA, 15 years)"
     echo "4. Click 'Create'"
-    echo "5. Copy the certificate to: nginx/ssl/cloudflare-origin.pem"
-    echo "6. Copy the private key to: nginx/ssl/cloudflare-origin.key"
+    echo "5. Copy the certificate to: nginx/ssl/vdmtechde.pem"
+    echo "6. Copy the private key to: nginx/ssl/vdmtechde.key"
     echo ""
     echo "Then run this script again."
     exit 1
@@ -37,8 +37,8 @@ fi
 mkdir -p nginx/ssl
 
 # Set proper permissions on SSL files
-chmod 600 nginx/ssl/cloudflare-origin.key
-chmod 644 nginx/ssl/cloudflare-origin.pem
+chmod 600 nginx/ssl/vdmtechde.key
+chmod 644 nginx/ssl/vdmtechde.pem
 
 echo ""
 echo "Starting services..."
