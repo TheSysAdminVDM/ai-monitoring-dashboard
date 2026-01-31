@@ -78,3 +78,53 @@ export interface ApiResponse<T> {
   error?: string;
   message?: string;
 }
+
+// Claude Code Stats Types
+export interface ClaudeCodeDailyActivity {
+  date: string;
+  messageCount: number;
+  sessionCount: number;
+  toolCallCount: number;
+}
+
+export interface ClaudeCodeDailyModelTokens {
+  date: string;
+  tokensByModel: Record<string, number>;
+}
+
+export interface ClaudeCodeModelUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadInputTokens: number;
+  cacheWriteInputTokens?: number;
+}
+
+export interface ClaudeCodeStats {
+  dailyActivity: ClaudeCodeDailyActivity[];
+  dailyModelTokens: ClaudeCodeDailyModelTokens[];
+  modelUsage: Record<string, ClaudeCodeModelUsage>;
+  totalSessions: number;
+  totalMessages: number;
+}
+
+export interface ClaudeCodeDashboardMetrics {
+  totalSessions: number;
+  totalMessages: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCacheReadTokens: number;
+  todayMessages: number;
+  todayToolCalls: number;
+  // Live session data for today
+  todayInputTokens?: number;
+  todayOutputTokens?: number;
+  todayCacheReadTokens?: number;
+  todayCacheCreationTokens?: number;
+  modelBreakdown: {
+    model: string;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    totalTokens: number;
+  }[];
+}

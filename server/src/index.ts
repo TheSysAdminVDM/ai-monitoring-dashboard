@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 
 import tokenUsageRoutes from './routes/tokenUsageRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import claudeCodeRoutes from './routes/claudeCodeRoutes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { pool } from './config/database';
 
@@ -14,7 +15,7 @@ import { pool } from './config/database';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Security middleware
 app.use(helmet());
@@ -64,6 +65,7 @@ app.get('/health', async (req, res) => {
 // API Routes
 app.use('/api/token-usage', tokenUsageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/claude-code', claudeCodeRoutes);
 
 // Error handling
 app.use(notFoundHandler);

@@ -1,8 +1,7 @@
-import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Header } from './components/Header';
-import { Dashboard } from './pages/Dashboard';
+import { ClaudeCodeDashboard } from './pages/ClaudeCodeDashboard';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +20,7 @@ function App() {
         <div className="min-h-screen bg-space-black">
           <Header />
           <main>
-            <Dashboard />
+            <ClaudeCodeDashboard />
           </main>
         </div>
       </Router>
