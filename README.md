@@ -24,7 +24,7 @@ A real-time AI token usage monitoring dashboard with a dark sci-fi cockpit theme
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/ai-monitoring-dashboard.git
+git clone https://github.com/TheSysAdminVDM/ai-monitoring-dashboard.git
 cd ai-monitoring-dashboard
 
 # Install dependencies
